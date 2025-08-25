@@ -1,21 +1,21 @@
-const { onCall } = require("firebase-functions/v2/https");
+const { http } = require("firebase-functions/v2/https");
 const { initializeApp } = require("firebase-admin/app");
 const vision = require("@google-cloud/vision");
+const cors = require("cors")({ origin: true });
 
 initializeApp();
 const client = new vision.ImageAnnotatorClient();
 
-exports.extractDataFromImage = onCall(async (request) => {
-  if (!request.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "You must be logged in.");
-  }
-
-  const imageBuffer = Buffer.from(request.data.image, "base64");
+exports.extractDataFromImage = http.onRequest({ cors: true }, async (req, res) => {
+  // For a standard HTTP request, the data is in req.body.data
+  const imageBuffer = Buffer.from(req.body.data.image, "base64");
 
   try {
     const [result] = await client.textDetection(imageBuffer);
     if (!result.fullTextAnnotation) {
-       return { no: null, principal: null, date: null };
+       console.log("No text found in the image.");
+       res.status(200).send({ data: { no: null, principal: null, date: null } });
+       return;
     }
     const fullText = result.fullTextAnnotation.text;
 
@@ -33,10 +33,11 @@ exports.extractDataFromImage = onCall(async (request) => {
     const principalMatch = fullText.match(principalRegex);
     if (principalMatch) { parsedData.principal = principalMatch[1].replace(/,/g, ""); }
 
-    return parsedData;
+    // Send the data back in the correct format
+    res.status(200).send({ data: parsedData });
 
   } catch (error) {
     console.error("Vision API Error:", error);
-    throw new functions.https.HttpsError("internal", "An error occurred while processing the image.");
+    res.status(500).send({ error: "An error occurred while processing the image." });
   }
 });
