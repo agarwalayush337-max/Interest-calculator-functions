@@ -1,0 +1,12 @@
+# This file gives explicit instructions to Google Cloud Build
+
+steps:
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - run
+    - deploy
+    - interest-calculator-functions   # This MUST match your Cloud Run service name
+    - --source=.
+    - --region=europe-west1           # This MUST match your service's region
+    - --project=$PROJECT_ID
