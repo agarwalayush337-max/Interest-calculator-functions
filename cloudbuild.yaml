@@ -1,4 +1,4 @@
-# This file gives explicit instructions to Google Cloud Build
+# This file explicitly tells Cloud Build how to build and what machine to use
 
 steps:
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -6,7 +6,11 @@ steps:
   args:
     - run
     - deploy
-    - interest-calculator-functions   # This MUST match your Cloud Run service name
+    - interest-calculator-functions
     - --source=.
-    - --region=europe-west1           # This MUST match your service's region
+    - --region=europe-west1
     - --project=$PROJECT_ID
+
+# This section tells Cloud Build to use a machine with more memory
+options:
+  machineType: 'E2_MEDIUM'
